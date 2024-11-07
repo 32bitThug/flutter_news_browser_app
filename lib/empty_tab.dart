@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_browser/models/browser_model.dart';
+import 'package:flutter_browser/models/webview_model.dart';
 import 'package:flutter_browser/util.dart';
 import 'package:flutter_browser/rss_news/screens/home_screen.dart';
 import 'package:flutter_browser/rss_news/screens/app_language_selection_screen.dart';
+import 'package:flutter_browser/webview_tab.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'models/window_model.dart';
 
 class EmptyTab extends StatefulWidget {

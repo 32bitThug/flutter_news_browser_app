@@ -1,18 +1,14 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_browser/models/browser_model.dart';
 import 'package:flutter_browser/models/search_engine_model.dart';
 import 'package:flutter_browser/models/webview_model.dart';
-import 'package:flutter_browser/pages/settings/adRemoverSettings.dart';
 import 'package:flutter_browser/util.dart';
-import 'package:flutter_browser/webview_tab.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/window_model.dart';
-import '../../Db/HiveDBHelper.dart';
 import '../../project_info_popup.dart';
 
 class CrossPlatformSettings extends StatefulWidget {
@@ -33,60 +29,6 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
     _customHomePageController.dispose();
     _customUserAgentController.dispose();
     super.dispose();
-  }
-
-  final TextEditingController textController = TextEditingController();
-  List listOfClassesRules = [];
-  List listOfIdRules = [];
-
-  @override
-  void initState() {
-    super.initState();
-    setRules();
-  }
-
-  setRules(){
-    listOfClassesRules = HiveDBHelper.getAllClassRules();
-    listOfIdRules = HiveDBHelper.getALlIdRules();
-    setState(() {});
-  }
-
-  showAddingDialog(Size size,bool isClass){
-    showDialog(context: context, builder: (context){
-      return AlertDialog(
-
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          Container(width: size.width*0.275,child: ElevatedButton(onPressed: (){
-            Navigator.pop(context);
-          }, child: Text("Discard"),style: ElevatedButton.styleFrom(backgroundColor: Colors.red,foregroundColor: Colors.white),),),
-          Container(width: size.width*0.275,child: ElevatedButton(onPressed: (){
-            if(textController.text.isNotEmpty) {
-              if(isClass) {
-                HiveDBHelper.addClassRule(textController.text);
-              }else{
-                HiveDBHelper.addElementIdRule(textController.text);
-              }
-              textController.clear();
-              setRules();
-              Navigator.pop(context);
-            }
-          }, child: Text("Add"),style: ElevatedButton.styleFrom(backgroundColor: Colors.green,foregroundColor: Colors.white),),),
-        ],
-        content: Container(
-          height: size.height*0.1,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(isClass? "Class Name" : "Id Name"),
-              TextField(
-                controller: textController,
-              ),
-            ],
-          ),
-        ),
-      );
-    });
   }
 
   @override
@@ -135,41 +77,67 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
         ),
       ),
       ListTile(
-        title: const Text("Click to add Gemini API key"),
-        subtitle: RichText(
-          text: TextSpan(
-            text:
-                'If you don\'t already have one, create a key in Google AI Studio: ',
-            style: DefaultTextStyle.of(context).style, // default styling
-            children: [
-              TextSpan(
-                text: 'https://makersuite.google.com/app/apikey',
-                style: const TextStyle(
-                  color: Colors.blue, // Highlight as link
-                  decoration: TextDecoration.underline, // Underline like a link
+        title: const Text("Home page"),
+        subtitle: Text(settings.homePageEnabled
+            ? (settings.customUrlHomePage.isEmpty
+                ? "ON"
+                : settings.customUrlHomePage)
+            : "OFF"),
+        onTap: () {
+          _customHomePageController.text = settings.customUrlHomePage;
+
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                contentPadding: const EdgeInsets.all(0.0),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    StatefulBuilder(
+                      builder: (context, setState) {
+                        return SwitchListTile(
+                          title: Text(settings.homePageEnabled ? "ON" : "OFF"),
+                          value: settings.homePageEnabled,
+                          onChanged: (value) {
+                            setState(() {
+                              settings.homePageEnabled = value;
+                              browserModel.updateSettings(settings);
+                            });
+                          },
+                        );
+                      },
+                    ),
+                    StatefulBuilder(builder: (context, setState) {
+                      return ListTile(
+                        enabled: settings.homePageEnabled,
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                onSubmitted: (value) {
+                                  setState(() {
+                                    settings.customUrlHomePage = value;
+                                    browserModel.updateSettings(settings);
+                                    Navigator.pop(context);
+                                  });
+                                },
+                                keyboardType: TextInputType.url,
+                                decoration: const InputDecoration(
+                                    hintText: 'Custom URL Home Page'),
+                                controller: _customHomePageController,
+                              ),
+                            )
+                          ],
+                        ),
+                      );
+                    })
+                  ],
                 ),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () {
-                    var url = 'https://makersuite.google.com/app/apikey';
-                    // Use your app's browser model to navigate
-                    browserModel.addTab(WebViewTab(
-                        key: GlobalKey(),
-                        webViewModel: WebViewModel(url: WebUri(url))));
-                    Navigator.pop(context);
-                  },
-              ),
-            ],
-          ),
-        ),
-        onTap: () async {
-          var newApiKey =
-              await _showApiKeyInputDialog(context, settings.geminiApiKey);
-          if (newApiKey != null) {
-            setState(() {
-              settings.geminiApiKey = newApiKey;
-              browserModel.updateSettings(settings);
-            });
-          }
+              );
+            },
+          );
         },
       ),
       FutureBuilder(
@@ -262,124 +230,7 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
             transitionDuration: const Duration(milliseconds: 300),
           );
         },
-      ),
-
-
-
-      //Add Remover Settings
-      Row(
-        children: [
-          SizedBox(
-            width: 20,
-          ),
-          Text("Classes Rules",style: TextStyle(fontWeight: FontWeight.w800,fontSize: 20),),
-          Spacer(),
-          IconButton(icon: Icon(Icons.add),onPressed: (){
-            showAddingDialog(size,true);
-          },),
-          SizedBox(
-            width: 10,
-          ),
-        ],
-      ),
-      Container(
-        margin: EdgeInsets.symmetric(horizontal: 10),
-        child: listOfClassesRules.isNotEmpty ?
-        ListView.builder(itemCount: listOfClassesRules.length,shrinkWrap: true,physics: NeverScrollableScrollPhysics(),itemBuilder: (context,index){
-          String classRule = listOfClassesRules[index];
-          return Card(
-            color: Colors.white,
-            elevation: 5,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Text(classRule),
-                  Spacer(),
-                  InkWell(onTap: (){
-                    HiveDBHelper.removeClassRule(index);
-                    setRules();
-                  },child: Icon(Icons.delete,color: Colors.red,),),
-                  SizedBox(
-                    width: 5,
-                  ),
-                ],
-              ),
-            ),
-          );
-        })
-            : Card(
-          color: Colors.white,
-          elevation: 5,
-          child: Container(
-            alignment: Alignment.center,
-            height: size.height*0.2,
-            child: Text("No Rules for Classes Set yet"),
-          ),
-        ),
-      ),
-
-      SizedBox(
-        height: 20,
-      ),
-      Row(
-        children: [
-          SizedBox(
-            width: 20,
-          ),
-          Text("Id Rules",style: TextStyle(fontWeight: FontWeight.w800,fontSize: 20),),
-          Spacer(),
-          IconButton(icon: Icon(Icons.add),onPressed: (){
-            showAddingDialog(size, false);
-          },),
-          SizedBox(
-            width: 10,
-          ),
-        ],
-      ),
-      Container(
-        margin: EdgeInsets.symmetric(horizontal: 10),
-        child: listOfIdRules.isNotEmpty ?
-        ListView.builder(itemCount: listOfIdRules.length,shrinkWrap: true,physics: NeverScrollableScrollPhysics(),itemBuilder: (context,index){
-          String idRule = listOfIdRules[index];
-          return Card(
-            color: Colors.white,
-            elevation: 5,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Text(idRule),
-                  Spacer(),
-                  InkWell(onTap: (){
-                    HiveDBHelper.removeIdRule(index);
-                    setRules();
-                  },child: Icon(Icons.delete,color: Colors.red,),),
-                  SizedBox(
-                    width: 5,
-                  ),
-                ],
-              ),
-            ),
-          );
-        })
-            : Card(
-          color: Colors.white,
-          elevation: 5,
-          child: Container(
-            alignment: Alignment.center,
-            height: size.height*0.2,
-            child: Text("No Rules for Classes Set yet"),
-          ),
-        ),
-      ),
-
+      )
     ];
 
     if (Util.isAndroid()) {
@@ -663,36 +514,5 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
     ];
 
     return widgets;
-  }
-
-  Future<String?> _showApiKeyInputDialog(
-      BuildContext context, String currentApiKey) async {
-    var apiKeyController = TextEditingController(text: currentApiKey);
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Enter Gemini API key"),
-          content: TextField(
-            controller: apiKeyController,
-            decoration: const InputDecoration(hintText: "Enter API key"),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(apiKeyController.text);
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
   }
 }

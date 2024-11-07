@@ -5,21 +5,23 @@ import 'package:ferry/ferry.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_browser/Db/HiveDBHelper.dart';
-import 'package:flutter_browser/rss_news/client/client.dart';
-import 'package:flutter_browser/rss_news/services/summary_provider.dart';
-import 'package:flutter_browser/models/window_model.dart';
-import 'package:flutter_browser/util.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:window_manager_plus/window_manager_plus.dart';
-import 'package:path/path.dart' as p;
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_browser/Db/HiveDBHelper.dart';
 import 'package:flutter_browser/models/browser_model.dart';
 import 'package:flutter_browser/models/webview_model.dart';
+import 'package:flutter_browser/models/window_model.dart';
+import 'package:flutter_browser/rss_news/client/client.dart';
+import 'package:flutter_browser/rss_news/services/summary_provider.dart';
+import 'package:flutter_browser/util.dart';
+
 import 'browser.dart';
 
 // ignore: non_constant_identifier_names
@@ -41,9 +43,19 @@ const double TAB_VIEWER_TOP_SCALE_TOP_OFFSET = 250.0;
 // ignore: constant_identifier_names
 const double TAB_VIEWER_TOP_SCALE_BOTTOM_OFFSET = 230.0;
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+WebViewEnvironment? webViewEnvironment;
+Database? db;
 
+int windowId = 0;
+String? windowModelId;
+
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // ignore: unused_local_variable
+
+  await HiveDBHelper.initializeHive();
+
+  final Client client = await initClient(); // don't remove this line
   if (Util.isDesktop()) {
     windowId = args.isNotEmpty ? int.tryParse(args[0]) ?? 0 : 0;
     windowModelId = args.length > 1 ? args[1] : null;
@@ -86,16 +98,14 @@ void main() async {
       await WindowManagerPlus.current.focus();
     });
   }
-  // ignore: unused_local_variable
 
-  await HiveDBHelper.initializeHive();
-
-  final Client client = await initClient(); // don't remove this line
   WEB_ARCHIVE_DIR = (await getApplicationSupportDirectory()).path;
 
   TAB_VIEWER_BOTTOM_OFFSET_1 = 150.0;
   TAB_VIEWER_BOTTOM_OFFSET_2 = 160.0;
   TAB_VIEWER_BOTTOM_OFFSET_3 = 170.0;
+
+  await FlutterDownloader.initialize(debug: kDebugMode);
 
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
     final availableVersion = await WebViewEnvironment.getAvailableVersion();

@@ -10,7 +10,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'javascript_console_result.dart';
 import 'long_press_alert_dialog.dart';
 import 'models/browser_model.dart';
@@ -77,17 +76,6 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
           ''');
   }
 
-  removeHeaderAndFooter() async {
-    await _webViewController!.evaluateJavascript(source: '''
-    
-  document.querySelector('header').remove();
-  document.querySelector('footer').remove();
-  document.getElementById("containerMain").style.marginTop = "0";
-  
-  
-    ''');
-    print("Header and Footers Removed Successfully");
-  }
 
   @override
   void initState() {

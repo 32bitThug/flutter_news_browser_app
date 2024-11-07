@@ -94,15 +94,16 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
 
   void _showEmptyTab() {
     setState(() {
-      var browserModel = Provider.of<BrowserModel>(context, listen: false);
-      browserModel.webViewTabs.clear(); // Clear existing tabs
+      var windowModel = Provider.of<WindowModel>(context, listen: false);
+      windowModel.webViewTabs.clear(); // Clear existing tabs
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Selector<WebViewModel, ({WebUri? item1, int? item2})>(
-        selector: (context, webViewModel) => (item1: webViewModel.url, item2: webViewModel.tabIndex),
+        selector: (context, webViewModel) =>
+            (item1: webViewModel.url, item2: webViewModel.tabIndex),
         builder: (context, record, child) {
           if (_prevTabIndex != record.item2) {
             _searchController?.text = record.item1?.toString() ?? '';
@@ -112,7 +113,8 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
             if (record.item1 == null) {
               _searchController?.text = "";
             }
-            if (record.item1 != null && _focusNode != null &&
+            if (record.item1 != null &&
+                _focusNode != null &&
                 !_focusNode!.hasFocus) {
               _searchController?.text = record.item1.toString();
             }
@@ -125,23 +127,23 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
               builder: (context, isIncognitoMode, child) {
                 return leading != null
                     ? AppBar(
-                  backgroundColor: isIncognitoMode
-                      ? Colors.black38
-                      : Theme.of(context).colorScheme.primaryContainer,
-                  leading: leading,
-                  leadingWidth: 130,
-                  titleSpacing: 0.0,
-                  title: _buildSearchTextField(),
-                  actions: _buildActionsMenu(),
-                )
+                        backgroundColor: isIncognitoMode
+                            ? Colors.black38
+                            : Theme.of(context).colorScheme.primaryContainer,
+                        leading: leading,
+                        leadingWidth: 130,
+                        titleSpacing: 0.0,
+                        title: _buildSearchTextField(),
+                        actions: _buildActionsMenu(),
+                      )
                     : AppBar(
-                  backgroundColor: isIncognitoMode
-                      ? Colors.black38
-                      : Theme.of(context).colorScheme.primaryContainer,
-                  titleSpacing: 10.0,
-                  title: _buildSearchTextField(),
-                  actions: _buildActionsMenu(),
-                );
+                        backgroundColor: isIncognitoMode
+                            ? Colors.black38
+                            : Theme.of(context).colorScheme.primaryContainer,
+                        titleSpacing: 10.0,
+                        title: _buildSearchTextField(),
+                        actions: _buildActionsMenu(),
+                      );
               });
         });
   }
@@ -1393,8 +1395,8 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
   }
 
   Future<void> fetchAiHighlights(String url, BuildContext context) async {
-    var browserModel = Provider.of<BrowserModel>(context, listen: false);
-    var webViewModel = browserModel.getCurrentTab()?.webViewModel;
+    var windowModel = Provider.of<WindowModel>(context, listen: false);
+    var webViewModel = windowModel.getCurrentTab()?.webViewModel;
     var webViewController = webViewModel?.webViewController;
 
     {
@@ -1402,14 +1404,15 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
       debugPrint('articlelink $url');
       List<String>? listSummary = box.get(url);
       listSummary ??= await summarizeIfNotAlready(url);
-        String jsCode = await loadLocalJs();
-        // Inject the list of strings to highlight into the JavaScript code
-        String finalJsCode = """
+      String jsCode = await loadLocalJs();
+      // Inject the list of strings to highlight into the JavaScript code
+      String finalJsCode = """
         window.textToHighlightList = ${listSummary.map((e) => "'${e.replaceAll("'", "\\'")}'").toList()};
         $jsCode
       """;
       // String newJS = await load();
-      final result = await webViewController!.evaluateJavascript(source: finalJsCode);
+      final result =
+          await webViewController!.evaluateJavascript(source: finalJsCode);
       debugPrint("rrrrrrrrrrrr" + result.toString());
     }
   }

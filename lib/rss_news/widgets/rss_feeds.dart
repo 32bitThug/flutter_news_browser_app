@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_browser/models/browser_model.dart';
 import 'package:flutter_browser/models/webview_model.dart';
+import 'package:flutter_browser/models/window_model.dart';
 import 'package:flutter_browser/rss_news/constants/constants.dart';
-import 'package:flutter_browser/rss_news/services/summary_provider.dart';
-import 'package:flutter_browser/rss_news/services/summeriz_article.dart';
 import 'package:flutter_browser/webview_tab.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 // import 'package:flutter_browser/src/constants/constants.dart';
 import 'package:xml/xml.dart' as xml;
 import 'dart:convert';
@@ -40,17 +37,17 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
     //       .getHighlights(context, widget.feedUrls);
     // });
   }
-  
+
   void addNewTab({WebUri? url}) async {
     var browserModel = Provider.of<BrowserModel>(context, listen: false);
     var settings = browserModel.getSettings();
     url ??= settings.homePageEnabled && settings.customUrlHomePage.isNotEmpty
         ? WebUri(settings.customUrlHomePage)
         : WebUri(settings.searchEngine.url);
-
-    browserModel.addTab(
+    var windowModel = Provider.of<WindowModel>(context, listen: false);
+    windowModel.addTab(
         WebViewTab(key: GlobalKey(), webViewModel: WebViewModel(url: url)));
-    executeJS(browserModel);
+    executeJS(windowModel);
   }
 
   DateTime _sortDateTime(String pubDate) {
@@ -234,8 +231,8 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   Future<String> loadLocalJs() async {
     return await rootBundle.loadString('assets/js/remove_adds.js');
   }
-  
-  void executeJS(BrowserModel browserModel) async {
+
+  void executeJS(WindowModel browserModel) async {
     try {
       final currentTab = browserModel.getCurrentTab();
       if (currentTab == null) {
