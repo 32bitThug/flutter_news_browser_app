@@ -16,9 +16,10 @@ import 'package:provider/provider.dart';
 import 'app_bar/tab_viewer_app_bar.dart';
 import 'empty_tab.dart';
 import 'models/browser_model.dart';
+import 'models/window_model.dart';
 
 class Browser extends StatefulWidget {
-  const Browser({Key? key}) : super(key: key);
+  const Browser({super.key});
 
   @override
   State<Browser> createState() => _BrowserState();
@@ -41,8 +42,8 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
       String? url = await platform.invokeMethod("getIntentData");
       if (url != null) {
         if (mounted) {
-          var browserModel = Provider.of<BrowserModel>(context, listen: false);
-          browserModel.addTab(WebViewTab(
+          final windowModel = Provider.of<WindowModel>(context, listen: false);
+          windowModel.addTab(WebViewTab(
             key: GlobalKey(),
             webViewModel: WebViewModel(url: WebUri(url)),
           ));
@@ -51,14 +52,11 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   restore() async {
-    var browserModel = Provider.of<BrowserModel>(context, listen: true);
+    final browserModel = Provider.of<BrowserModel>(context, listen: false);
+    final windowModel = Provider.of<WindowModel>(context, listen: false);
     browserModel.restore();
+    windowModel.restoreInfo();
   }
 
   @override
@@ -77,18 +75,22 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildBrowser() {
-    var currentWebViewModel = Provider.of<WebViewModel>(context, listen: true);
-    var browserModel = Provider.of<BrowserModel>(context, listen: true);
+    final currentWebViewModel = Provider.of<WebViewModel>(context, listen: true);
+    final browserModel = Provider.of<BrowserModel>(context, listen: true);
+    final windowModel = Provider.of<WindowModel>(context, listen: true);
 
     browserModel.addListener(() {
       browserModel.save();
     });
+    windowModel.addListener(() {
+      windowModel.saveInfo();
+    });
     currentWebViewModel.addListener(() {
-      browserModel.save();
+      windowModel.saveInfo();
     });
 
     var canShowTabScroller =
-        browserModel.showTabScroller && browserModel.webViewTabs.isNotEmpty;
+        browserModel.showTabScroller && windowModel.webViewTabs.isNotEmpty;
 
     return IndexedStack(
       index: canShowTabScroller ? 1 : 0,
@@ -102,9 +104,9 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
   Widget _buildWebViewTabs() {
     return WillPopScope(
         onWillPop: () async {
-          var browserModel = Provider.of<BrowserModel>(context, listen: false);
-          var webViewModel = browserModel.getCurrentTab()?.webViewModel;
-          var webViewController = webViewModel?.webViewController;
+          final windowModel = Provider.of<WindowModel>(context, listen: false);
+          final webViewModel = windowModel.getCurrentTab()?.webViewModel;
+          final webViewController = webViewModel?.webViewController;
 
           if (webViewController != null) {
             if (await webViewController.canGoBack()) {
@@ -115,7 +117,7 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
 
           if (webViewModel != null && webViewModel.tabIndex != null) {
             setState(() {
-              browserModel.closeTab(webViewModel.tabIndex!);
+              windowModel.closeTab(webViewModel.tabIndex!);
             });
             if (mounted) {
               FocusScope.of(context).unfocus();
@@ -123,38 +125,33 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
             return false;
           }
 
-          return browserModel.webViewTabs.isEmpty;
+          return windowModel.webViewTabs.isEmpty;
         },
         child: Listener(
           onPointerUp: (_) {
-            FocusScopeNode currentFocus = FocusScope.of(context);
-            if (!currentFocus.hasPrimaryFocus &&
-                currentFocus.focusedChild != null) {
-              currentFocus.focusedChild!.unfocus();
+            if (Util.isIOS() || Util.isAndroid()) {
+              FocusScopeNode currentFocus = FocusScope.of(context);
+              if (!currentFocus.hasPrimaryFocus &&
+                  currentFocus.focusedChild != null) {
+                currentFocus.focusedChild!.unfocus();
+              }
             }
           },
           child: Scaffold(
-              // floatingActionButton: FloatingActionButton(
-              //   child: Icon(Icons.ads_click),
-              //   onPressed: (){
-              //     Navigator.push(context,MaterialPageRoute(builder: (context)=> AdRemoverSettings(),),);
-              //   },
-              // ),
-              appBar: const BrowserAppBar(),
-              body: _buildWebViewTabsContent()),
+              appBar: BrowserAppBar(), body: _buildWebViewTabsContent()),
         ));
   }
 
   Widget _buildWebViewTabsContent() {
-    var browserModel = Provider.of<BrowserModel>(context, listen: true);
+    final windowModel = Provider.of<WindowModel>(context, listen: true);
 
-    if (browserModel.webViewTabs.isEmpty || browserModel.homePage == false) {
+    if (windowModel.webViewTabs.isEmpty) {
       return const EmptyTab();
     }
 
-    for (final webViewTab in browserModel.webViewTabs) {
+    for (final webViewTab in windowModel.webViewTabs) {
       var isCurrentTab =
-          webViewTab.webViewModel.tabIndex == browserModel.getCurrentTabIndex();
+          webViewTab.webViewModel.tabIndex == windowModel.getCurrentTabIndex();
 
       if (isCurrentTab) {
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -166,12 +163,17 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
     }
 
     var stackChildren = <Widget>[
-      browserModel.getCurrentTab() ?? Container(),
+      windowModel.getCurrentTab() ?? Container(),
       _createProgressIndicator()
     ];
 
-    return Stack(
-      children: stackChildren,
+    return Column(
+      children: [
+        Expanded(
+            child: Stack(
+          children: stackChildren,
+        ))
+      ],
     );
   }
 
@@ -193,7 +195,8 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildWebViewTabsViewer() {
-    var browserModel = Provider.of<BrowserModel>(context, listen: true);
+    final browserModel = Provider.of<BrowserModel>(context, listen: true);
+    final windowModel = Provider.of<WindowModel>(context, listen: true);
 
     return WillPopScope(
         onWillPop: () async {
@@ -203,8 +206,8 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
         child: Scaffold(
             appBar: const TabViewerAppBar(),
             body: TabViewer(
-              currentIndex: browserModel.getCurrentTabIndex(),
-              children: browserModel.webViewTabs.map((webViewTab) {
+              currentIndex: windowModel.getCurrentTabIndex(),
+              children: windowModel.webViewTabs.map((webViewTab) {
                 webViewTabStateKey.currentState?.pause();
                 var screenshotData = webViewTab.webViewModel.screenshot;
                 Widget screenshotImage = Container(
@@ -222,7 +225,7 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
                         ? Uri.parse("${url.origin}/favicon.ico")
                         : null);
 
-                var isCurrentTab = browserModel.getCurrentTabIndex() ==
+                var isCurrentTab = windowModel.getCurrentTabIndex() ==
                     webViewTab.webViewModel.tabIndex;
 
                 return Column(
@@ -291,9 +294,9 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
                                 setState(() {
                                   if (webViewTab.webViewModel.tabIndex !=
                                       null) {
-                                    browserModel.closeTab(
+                                    windowModel.closeTab(
                                         webViewTab.webViewModel.tabIndex!);
-                                    if (browserModel.webViewTabs.isEmpty) {
+                                    if (windowModel.webViewTabs.isEmpty) {
                                       browserModel.showTabScroller = false;
                                     }
                                   }
@@ -312,7 +315,7 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
               }).toList(),
               onTap: (index) async {
                 browserModel.showTabScroller = false;
-                browserModel.showTab(index);
+                windowModel.showTab(index);
               },
             )));
   }
