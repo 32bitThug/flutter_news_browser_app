@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: isLoading
-                  ? const CircularProgressIndicator()
+                  ? const Center(child: CircularProgressIndicator())
                   : selectedCategory.isEmpty
                       ? error.isNotEmpty
                           ? Center(child: Text(error))

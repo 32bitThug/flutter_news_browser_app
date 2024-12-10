@@ -1,7 +1,7 @@
 console.log("Running custom JavaScript...");
 try {
   const textToHighlightList = window.textToHighlightList || [];
-  console.log('list ', textToHighlightList);
+  // console.log('list ', textToHighlightList);
   const paragraphs = document.querySelectorAll('p');
 
   // Function to escape special characters for RegExp
