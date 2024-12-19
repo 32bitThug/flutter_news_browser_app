@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/rss_news/constants/constants.dart';
-// import 'package:flutter_browser/rss_news/services/backgroundTokenService.dart';
+import 'package:flutter_browser/rss_news/provider/timer_provider.dart';
+import 'package:flutter_browser/rss_news/screens/app_language_selection_screen.dart';
+import 'package:flutter_browser/rss_news/services/http_ovverides.dart';
 import 'package:flutter_browser/rss_news/services/unique_id.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -33,7 +36,9 @@ const double TAB_VIEWER_TOP_SCALE_TOP_OFFSET = 250.0;
 const double TAB_VIEWER_TOP_SCALE_BOTTOM_OFFSET = 230.0;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  // WebViewPlatform.instance = WebWebViewPlatform();
+  // HandShakeException fix
+  HttpOverrides.global = MyHttpOverrides();
   // Initialize Hive and other services
   await Hive.initFlutter();
   await HiveDBHelper.initializeHive();
@@ -61,7 +66,7 @@ void main() async {
             return browserModel;
           },
         ),
-        // ChangeNotifierProvider(create: (context) => BackgroundTask()),
+        ChangeNotifierProvider(create: (_) => TimerProvider()),
       ],
       child: const FlutterBrowserApp(),
     ),
@@ -76,6 +81,7 @@ class FlutterBrowserApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter News Browser',
       scaffoldMessengerKey: rootScaffoldMessengerKey,
+      navigatorKey: myNavigatorKey,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -83,7 +89,18 @@ class FlutterBrowserApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const Browser(),
+        '/': (context) => ValueListenableBuilder(
+              valueListenable:
+                  Hive.box<List<String>>('preferences').listenable(),
+              builder:
+                  (BuildContext context, Box<List<String>> box, Widget? child) {
+                Provider.of<TimerProvider>(context, listen: false).startTimer();
+                final sources = box.get('selectedSources') ?? [];
+                return sources.isNotEmpty
+                    ? const Browser()
+                    : AppLanguageSelectionScreen();
+              },
+            ),
       },
     );
   }

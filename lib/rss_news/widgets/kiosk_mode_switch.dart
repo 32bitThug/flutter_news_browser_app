@@ -46,7 +46,7 @@ class KioskModeSwitchState extends State<KioskModeSwitch> {
   Future _showPasswordDialog() async {
     TextEditingController passwordController = TextEditingController();
 
-    showDialog (
+    showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -64,13 +64,12 @@ class KioskModeSwitchState extends State<KioskModeSwitch> {
               child: const Text("Cancel"),
             ),
             TextButton(
-              onPressed: ()  async {
+              onPressed: () async {
                 if (passwordController.text == _correctPassword) {
                   _isKioskModeEnabled = false;
-                   await HiveDBHelper.setKioskMode(false);
-                   await  _setKioskMode(false);
-                  setState(()  {
-                  });
+                  await HiveDBHelper.setKioskMode(false);
+                  await _setKioskMode(false);
+                  setState(() {});
                   Navigator.of(context).pop(); // Close the dialog
                 } else {
                   Navigator.of(context).pop();
@@ -86,18 +85,18 @@ class KioskModeSwitchState extends State<KioskModeSwitch> {
   }
 
   // Method to handle the switch change
-  Future _onKioskModeChanged(bool value)  async{
+  Future _onKioskModeChanged(bool value) async {
     if (value) {
       // If turning on Kiosk Mode, first check for permission
-    await   _checkPermissionsAndStartService();
+      await _checkPermissionsAndStartService();
     } else {
       // If turning off Kiosk Mode, show the password dialog
-     await _showPasswordDialog();
+      await _showPasswordDialog();
     }
   }
 
   // Method to update the kiosk mode status in the service
- Future< void> _setKioskMode(bool enabled) async {
+  Future<void> _setKioskMode(bool enabled) async {
     try {
       await platform.invokeMethod('setKioskMode', {'enabled': enabled});
     } on PlatformException catch (e) {
@@ -106,7 +105,7 @@ class KioskModeSwitchState extends State<KioskModeSwitch> {
   }
 
   // Check if the permissions are set and request if not
-  Future  _checkPermissionsAndStartService() async {
+  Future _checkPermissionsAndStartService() async {
     // You can check the permission status here (you might need a plugin for this)
     // If permissions are not granted, request permission
     await _startService();
@@ -114,10 +113,8 @@ class KioskModeSwitchState extends State<KioskModeSwitch> {
 
     // Start the service after requesting permission
     _isKioskModeEnabled = true;
-    await  HiveDBHelper.setKioskMode(true);
-    setState(() {
-      
-    });
+    await HiveDBHelper.setKioskMode(true);
+    setState(() {});
 
     // Notify service to start blocking apps
     await _setKioskMode(true);

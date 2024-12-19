@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:flutter_browser/rss_news/utils/show_snackbar.dart';
 
 class RegisterChildWidget extends StatefulWidget {
@@ -61,22 +62,22 @@ class _RegisterChildWidgetState extends State<RegisterChildWidget> {
               } else {
                 if (editIndex != null) {
                   // If editing, update the rule at the editIndex
-                 await HiveDBHelper.removeChildId(editIndex);
-                 await  HiveDBHelper.addChildDevice(id!);
+                  await HiveDBHelper.removeChildId(editIndex);
+                  await HiveDBHelper.addChildDevice(id!);
                 } else {
                   await HiveDBHelper.addChildDevice(id!);
                 }
                 // debugPrint(rules.toString());
                 Navigator.pop(context);
               }
-              debugPrint(HiveDBHelper.getAllChildDevices().toString());
+              debug(HiveDBHelper.getAllChildDevices().toString());
             },
             child: Text(editIndex == null ? "Add" : "Save"),
           ),
           if (editIndex != null)
             TextButton(
               onPressed: () async {
-              await  HiveDBHelper.removeChildId(editIndex);
+                await HiveDBHelper.removeChildId(editIndex);
                 Navigator.pop(context);
               },
               // Disable the button if editIndex is null

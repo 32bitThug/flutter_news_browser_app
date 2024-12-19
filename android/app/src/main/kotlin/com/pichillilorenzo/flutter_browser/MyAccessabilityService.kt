@@ -3,58 +3,61 @@ package com.pichillilorenzo.flutter_browser
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
-import android.util.Log
-import android.view.accessibility.AccessibilityEvent
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
+import android.util.Log
+import android.view.accessibility.AccessibilityEvent
 
 class MyAccessibilityService : AccessibilityService() {
+    val excludeList =
+            setOf(
+                    "com.google.android.googlequicksearchbox",
+                    "com.amazon.firelauncher",
+                    "com.android.inputmethod.latin",
+                    "android",
+                    "com.google.android.ext.services",
+                    "com.google.android.inputmethod.latin",
+                    "com.pichillilorenzo.flutter_browser",
+                    "com.android.systemui",
+                    "com.google.android.apps.nexuslauncher",
+                    "com.google.android.launcher",
+                    "com.android.launcher"
+            )
     private val TAG = "MyAccessibilityService"
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        Log.d(TAG, "Event type: ${event?.eventType}")
         val isKioskModeEnabled = getKioskModeFromPreferences()
-    
-        if (isKioskModeEnabled && event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+        Log.d(TAG, "Kiosk mode enabled: $isKioskModeEnabled")
+
+        if (isKioskModeEnabled && event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+        ) {
             val packageName = event.packageName?.toString()
-    
-            if (packageName == null) {
-                Log.w(TAG, "Package name is null, skipping event")
-                return
-            }
-    
             Log.d(TAG, "Current package: $packageName")
-    
-            val excludeList = setOf(
-               
-                "com.amazon.firelauncher",
-                "com.android.inputmethod.latin",
-                "android",
-                "com.google.android.ext.services",
-                "com.google.android.inputmethod.latin",
-                "com.pichillilorenzo.flutter_browser",
-                "com.android.systemui",
-                "com.google.android.apps.nexuslauncher",
-                "com.google.android.launcher"
-            )
-    
+
             if (!excludeList.contains(packageName)) {
                 Log.d(TAG, "Blocking package: $packageName")
-    
-                // Perform the first block action
+
                 val backSuccess = performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
                 Log.d(TAG, "Performed back action: $backSuccess")
-    
-                // Schedule the second block after a delay
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val currentPackageAfterDelay = event.packageName?.toString()
-                    if (currentPackageAfterDelay != null && !excludeList.contains(currentPackageAfterDelay)) {
-                        Log.d(TAG, "Still blocking package after delay: $currentPackageAfterDelay")
-                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME)
-                    }
-                }, 2000) // 2-second delay
+
+                Handler(Looper.getMainLooper())
+                        .postDelayed(
+                                {
+                                    val currentPackageAfterDelay = event.packageName?.toString()
+                                    if (!excludeList.contains(currentPackageAfterDelay)) {
+                                        Log.d(
+                                                TAG,
+                                                "Still blocking package after delay: $currentPackageAfterDelay"
+                                        )
+                                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME)
+                                    }
+                                },
+                                2000
+                        )
             }
         }
     }
-    
 
     override fun onInterrupt() {
         // Handle interrupt
@@ -66,7 +69,20 @@ class MyAccessibilityService : AccessibilityService() {
         // Restore kiosk mode state from SharedPreferences
         val isKioskModeEnabled = getKioskModeFromPreferences()
         Log.d(TAG, "Kiosk mode restored: $isKioskModeEnabled")
+        val enabledServices =
+                Settings.Secure.getString(
+                        contentResolver,
+                        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+                )
 
+        if (enabledServices != null &&
+                        enabledServices.contains(MyAccessibilityService::class.java.name)
+        ) {
+            Log.d(TAG, "Accesibility Permission granted: true")
+        } else {
+            Log.d(TAG, "Accesibility Permission not granted")
+        }
+        // onAccessibilityEvent(null)
         // Setup the service to listen for window state changes
         val info =
                 AccessibilityServiceInfo().apply {

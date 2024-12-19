@@ -13,11 +13,13 @@ enum Language {
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+final GlobalKey<NavigatorState> myNavigatorKey = GlobalKey<NavigatorState>();
+
 const apiUrl = "https://dev-api-news-rss-sr235aqw.pragament.com/graphql";
 
 const staticApiUrl = "https://staticapis.pragament.com/rss_news/rss_feeds.json";
 
-const parentalControlApiUrl = "http://192.168.1.112:5008/graphql";
+const parentalControlApiUrl = "http://192.168.1.104:5008/graphql";
 
 const erpSchoolApiUrl = "http://192.168.1.106:5002/graphql";
 

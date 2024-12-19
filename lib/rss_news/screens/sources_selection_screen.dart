@@ -34,7 +34,7 @@ class _SourcesSelectionScreenState extends State<SourcesSelectionScreen> {
     final box = Hive.box<List<String>>('preferences');
     final languages = box.get('selectedLanguages');
     final categories = box.get('selectedCategories');
-    debugPrint('cat$categories');
+    // debugPrint('cat$categories');
     if (languages != null && categories != null) {
       try {
         final sourceFeeds = await _fetchStaticFeeds.feedsBySelectedCategories(
@@ -60,7 +60,7 @@ class _SourcesSelectionScreenState extends State<SourcesSelectionScreen> {
       final box = Hive.box<List<String>>('preferences');
       await box.put('selectedSources', selectedSources);
       await checkDeviceAlreadyRegisterd();
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => const Browser(),

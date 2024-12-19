@@ -133,14 +133,7 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
             }
           },
           child: Scaffold(
-              // floatingActionButton: FloatingActionButton(
-              //   child: Icon(Icons.ads_click),
-              //   onPressed: (){
-              //     Navigator.push(context,MaterialPageRoute(builder: (context)=> AdRemoverSettings(),),);
-              //   },
-              // ),
-              appBar: const BrowserAppBar(),
-              body: _buildWebViewTabsContent()),
+              appBar: const BrowserAppBar(), body: _buildWebViewTabsContent()),
         ));
   }
 
