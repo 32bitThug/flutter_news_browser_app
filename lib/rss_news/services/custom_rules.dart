@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
 
@@ -28,7 +27,7 @@ class CustomRules {
     // var url = webViewTab.webViewModel.url
     // String url = WebUri(uri);
     String host = findLongestPart(uri!.host);
-    debugPrint(host);
+    // debugPrint(host);
     String jsCode = await rootBundle.loadString('assets/js/remove_adds.js');
     List<Rules> filteredRules = allRules
         .where((rule) =>
@@ -38,7 +37,7 @@ class CustomRules {
         .toList();
 
     List idNamesToRemove = filteredRules.map((rule) => rule.value).toList();
-    debugPrint(idNamesToRemove.toString());
+    // debugPrint(idNamesToRemove.toString());
     // Execute the JavaScript in the WebView
     if (webViewController != null) {
       await webViewController.evaluateJavascript(source: '''

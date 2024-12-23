@@ -118,15 +118,15 @@ class _RulesWidgetState extends State<RulesWidget> {
               } else {
                 if (editIndex != null) {
                   // If editing, update the rule at the editIndex
-                 await HiveDBHelper.removeRule(editIndex);
-                 await HiveDBHelper.addRule(Rules(
+                  await HiveDBHelper.removeRule(editIndex);
+                  await HiveDBHelper.addRule(Rules(
                     category: ruleCategory!,
                     type: ruleType!,
                     value: ruleValue!,
                     domain: websiteDomainValue!,
                   ));
                 } else {
-                 await HiveDBHelper.addRule(Rules(
+                  await HiveDBHelper.addRule(Rules(
                     category: ruleCategory!,
                     type: ruleType!,
                     value: ruleValue!,
@@ -142,7 +142,7 @@ class _RulesWidgetState extends State<RulesWidget> {
           if (editIndex != null)
             TextButton(
               onPressed: () async {
-              await  HiveDBHelper.removeRule(editIndex);
+                await HiveDBHelper.removeRule(editIndex);
                 Navigator.pop(context);
               },
               // Disable the button if editIndex is null

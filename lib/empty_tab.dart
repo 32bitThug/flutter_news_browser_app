@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/rss_news/models/most_visited_website_model.dart';
 import 'package:flutter_browser/rss_news/screens/home_screen.dart';
-import 'package:flutter_browser/rss_news/screens/app_language_selection_screen.dart';
 import 'package:flutter_browser/util.dart';
 import 'package:flutter_browser/webview_tab.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+// import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+
+// import 'package:webview_flutter_web/webview_flutter_web.dart';
 import 'models/browser_model.dart';
 import 'models/webview_model.dart';
 
 class EmptyTab extends StatefulWidget {
   final WebViewController? webViewController;
+  // final WebViewController? viewController;
 
   const EmptyTab({Key? key, this.webViewController}) : super(key: key);
 
@@ -23,7 +26,6 @@ class EmptyTab extends StatefulWidget {
 class _EmptyTabState extends State<EmptyTab> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
   }
 
@@ -51,18 +53,8 @@ class _EmptyTabState extends State<EmptyTab> {
               },
             ),
             // Main content (HomeScreen or AppLanguageSelectionScreen)
-            Expanded(
-              child: ValueListenableBuilder(
-                valueListenable:
-                    Hive.box<List<String>>('preferences').listenable(),
-                builder: (BuildContext context, Box<List<String>> box,
-                    Widget? child) {
-                  final sources = box.get('selectedSources') ?? [];
-                  return sources.isNotEmpty
-                      ? const HomeScreen()
-                      : AppLanguageSelectionScreen();
-                },
-              ),
+            const Expanded(
+              child: HomeScreen(),
             ),
           ],
         ),
@@ -71,43 +63,74 @@ class _EmptyTabState extends State<EmptyTab> {
   }
 
   Widget _buildHorizontalWebsiteList(List<MostVisitedWebsiteModel> websites) {
-    return SizedBox(
-      height: 80,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: websites.length,
-        itemBuilder: (context, index) {
-          final website = websites[index];
-          return GestureDetector(
-            onTap: () => _openWebsite(website.domain),
-            onLongPress: () => _showDeleteConfirmationDialog(website, context),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Column(
-                children: [
-                  Container(
-                    width: 45,
-                    padding: EdgeInsets.all(3),
-                    child: Image.network(
-                      website.faviconUrl,
-                      fit: BoxFit.cover,
+    return Padding(
+      padding: const EdgeInsets.only(top: 100.0, bottom: 50),
+      child: SizedBox(
+        height: 80,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: websites.length,
+          itemBuilder: (context, index) {
+            final website = websites[index];
+            return GestureDetector(
+              onTap: () => _openWebsite(website.domain),
+              onLongPress: () =>
+                  _showDeleteConfirmationDialog(website, context),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Column(
+                  children: [
+                    Container(
+                        width: 45,
+                        padding: EdgeInsets.all(3),
+                        child: Image.network(
+                          website.faviconUrl.isNotEmpty &&
+                                  Uri.tryParse(website.faviconUrl)
+                                          ?.isAbsolute ==
+                                      true
+                              ? website.faviconUrl
+                              : 'assets/images/news.jpeg', // fallback image in case URL is invalid
+                          fit: BoxFit.cover,
+                          loadingBuilder: (BuildContext context, Widget child,
+                              ImageChunkEvent? loadingProgress) {
+                            if (loadingProgress == null) {
+                              return child; // Image loaded successfully
+                            } else {
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          (loadingProgress.expectedTotalBytes ??
+                                              1)
+                                      : null,
+                                ),
+                              ); // Show loading indicator while the image is loading
+                            }
+                          },
+                          errorBuilder: (BuildContext context, Object error,
+                              StackTrace? stackTrace) {
+                            return Image.asset('assets/images/news.jpeg',
+                                fit: BoxFit
+                                    .cover); // Show fallback image in case of error
+                          },
+                        )),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 50,
+                      child: Text(
+                        website.name,
+                        style: const TextStyle(fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 50,
-                    child: Text(
-                      website.name,
-                      style: const TextStyle(fontSize: 12),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

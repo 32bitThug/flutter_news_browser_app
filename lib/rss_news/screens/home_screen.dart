@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (language != null) {
       categoryFeeds = await _fetchStaticFeeds.feedsBySelectedSource(
           language, _categories, sources);
-      debugPrint(categoryFeeds.toString());
+      // debugPrint(categoryFeeds.toString());
       if (mounted) {
         // Check again before updating the state
         setState(() {
@@ -70,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         isLoading = true;
       });
-      debugPrint(category);
+      // debugPrint(category);
       final feeds =
           await _feedsByCategoryController.byAStaticCategory(category);
       setState(() {
@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: isLoading
-                  ? const CircularProgressIndicator()
+                  ? const Center(child: CircularProgressIndicator())
                   : selectedCategory.isEmpty
                       ? error.isNotEmpty
                           ? Center(child: Text(error))

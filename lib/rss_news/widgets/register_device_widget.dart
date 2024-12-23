@@ -1,4 +1,3 @@
-
 // ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,20 +15,6 @@ class RegisterDeviceWidget extends StatefulWidget {
 }
 
 class _RegisterDeviceWidgetState extends State<RegisterDeviceWidget> {
-  static checkDeviceAlreadyRegisterd() async {
-    final res = await GraphQLRequests().getDeviceBydeviceID(deviceId);
-    if (res != null) {
-      Device device = Device(
-        deviceId: deviceId,
-        deviceName: res["deviceName"],
-        id: res["_id"],
-        groupId: "67289da09753666bcf4cf78a",
-        profileId: "67289ee59753666bcf4cf7db",
-      );
-      await HiveDBHelper.createDevice(device);
-    }
-  }
-
   Future<void> showAddingDilog() async {
     {
       String deviceName = "";
@@ -91,49 +76,41 @@ class _RegisterDeviceWidgetState extends State<RegisterDeviceWidget> {
     }
   }
 
-  void showEditDilog() async {
-    Device? device = HiveDBHelper.getDevice();
+  void showEditDilog(Device device) async {
+    final res = await GraphQLRequests().getDeviceById(device.id!);
+    if (res != null) {
+      String deviceName = device.deviceName;
+      TextEditingController deviceNameController =
+          TextEditingController(text: deviceName);
 
-    if (device != null) {
-      final res = await GraphQLRequests().getDeviceById(device.id!);
-      if (res != null) {
-        String deviceName = device.deviceName;
-        TextEditingController deviceNameController =
-            TextEditingController(text: deviceName);
-
-        showDialog(
-          // ignore: use_build_context_synchronously
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text("Edit Device Name"),
-            content: Column(mainAxisSize: MainAxisSize.min, children: [
-              TextField(
-                onChanged: (value) => deviceName = value,
-                controller: deviceNameController,
-                decoration: const InputDecoration(labelText: "Device Name"),
-              ),
-            ]),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  device.deviceName = deviceName;
-                  await GraphQLRequests().updateDevice(device);
-                  await HiveDBHelper.updateDevice(deviceName);
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
-                },
-                child: const Text("Add"),
-              )
-            ],
-          ),
-        );
-      } else {
-        showSnackBar(message: "Device not rigistered");
-      }
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Edit Device Name"),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(
+              onChanged: (value) => deviceName = value,
+              controller: deviceNameController,
+              decoration: const InputDecoration(labelText: "Device Name"),
+            ),
+          ]),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                device.deviceName = deviceName;
+                await GraphQLRequests().updateDevice(device);
+                await HiveDBHelper.updateDevice(deviceName);
+                Navigator.pop(context);
+              },
+              child: const Text("Add"),
+            )
+          ],
+        ),
+      );
     } else {
       showSnackBar(message: "Device not rigistered");
     }
@@ -141,12 +118,15 @@ class _RegisterDeviceWidgetState extends State<RegisterDeviceWidget> {
 
   @override
   Widget build(BuildContext context) {
+    Device? device = HiveDBHelper.getDevice();
+    final flag = device == null;
     return Column(
       children: [
         ListTile(
           // dense: true,
           // contentPadding: EdgeInsets.z,
-          title: const Text('Register Your Device'),
+          title:
+              Text(flag ? 'Register Your Device' : "Device Is Being monitored"),
           subtitle: InkWell(
             onTap: () {
               Clipboard.setData(ClipboardData(text: deviceId));
@@ -177,19 +157,20 @@ class _RegisterDeviceWidgetState extends State<RegisterDeviceWidget> {
           trailing: Wrap(
             spacing: 12,
             children: [
-              if (HiveDBHelper.getDevice() == null)
+              if (flag)
                 IconButton(
                     onPressed: showAddingDilog,
                     icon: const Icon(
                       Icons.add,
                       color: Colors.green,
                     )),
-              IconButton(
-                  onPressed: showEditDilog,
-                  icon: const Icon(
-                    Icons.edit,
-                    color: Colors.blue,
-                  ))
+              if (!flag)
+                IconButton(
+                    onPressed: () => showEditDilog(device),
+                    icon: const Icon(
+                      Icons.edit,
+                      color: Colors.blue,
+                    ))
             ],
           ),
         ),

@@ -172,10 +172,6 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         await controller.setSettings(settings: initialSettings);
 
         _webViewController = controller;
-        // await removeHeaderAndFooter();
-
-        // await removeAds();
-
         widget.webViewModel.webViewController = controller;
         widget.webViewModel.pullToRefreshController = _pullToRefreshController;
         widget.webViewModel.findInteractionController =
@@ -230,7 +226,8 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
             "Class",
             browserModel.getSettings().immersiveReaderEnabled,
             widget.webViewModel.url);
-        await customRules.removeHeaderAndFooter(_webViewController);
+        // await customRules.removeHeaderAndFooter(_webViewController);
+
         widget.webViewModel.url = url;
         widget.webViewModel.favicon = null;
         widget.webViewModel.loaded = true;

@@ -85,16 +85,26 @@ query childsActivities($deviceId: String ) {
 }
  ''';
   static const createSession = r'''
-mutation createSession($ class:String!,$subject: String!,
-$chapter: String!,
-$topic: String!,
-$subtopic: String!,
-$duration: Int!){
-  createSession(class:$class,subject:$subject,chapter:$chapter,topic:$topic,subtopic:$subtopic,
-  duration:$duration){
-    _id
+mutation CreateSession(
+  $class: String!
+  $subject: String!
+  $chapter: String!
+  $topics: [String!]!
+  $subtopics: [String!]!
+  $duration: Int!
+) {
+  createSession(
+    class: $class
+    subject: $subject
+    chapter: $chapter
+    topics: $topics
+    subtopics: $subtopics
+    duration: $duration
+  ) {
+    id 
   }
 }
+
 
  ''';
   static const getBooks = r'''
