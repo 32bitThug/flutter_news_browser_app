@@ -15,6 +15,8 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 
 final GlobalKey<NavigatorState> myNavigatorKey = GlobalKey<NavigatorState>();
 
+final GlobalKey<NavigatorState> myNavigatorKey = GlobalKey<NavigatorState>();
+
 const apiUrl = "https://dev-api-news-rss-sr235aqw.pragament.com/graphql";
 
 const staticApiUrl = "https://staticapis.pragament.com/rss_news/rss_feeds.json";

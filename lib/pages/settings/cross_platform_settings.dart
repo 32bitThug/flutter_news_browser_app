@@ -5,6 +5,7 @@ import 'package:flutter_browser/models/browser_model.dart';
 import 'package:flutter_browser/models/search_engine_model.dart';
 import 'package:flutter_browser/models/webview_model.dart';
 import 'package:flutter_browser/rss_news/screens/session_screen.dart';
+import 'package:flutter_browser/rss_news/screens/session_screen.dart';
 import 'package:flutter_browser/rss_news/widgets/kiosk_mode_switch.dart';
 import 'package:flutter_browser/rss_news/widgets/register_child_widget.dart';
 import 'package:flutter_browser/rss_news/widgets/register_device_widget.dart';
