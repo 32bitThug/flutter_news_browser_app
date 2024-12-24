@@ -91,6 +91,70 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
         ),
       ),
       ListTile(
+        title: const Text("Home page"),
+        subtitle: Text(settings.homePageEnabled
+            ? (settings.customUrlHomePage.isEmpty
+                ? "ON"
+                : settings.customUrlHomePage)
+            : "OFF"),
+        onTap: () {
+          settings.customUrlHomePage = _customHomePageController.text;
+
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                contentPadding: const EdgeInsets.all(0.0),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    StatefulBuilder(
+                      builder: (context, setState) {
+                        return SwitchListTile(
+                          title: Text(settings.homePageEnabled ? "ON" : "OFF"),
+                          value: settings.homePageEnabled,
+                          onChanged: (value) {
+                            setState(() {
+                              settings.homePageEnabled = value;
+                              browserModel.updateSettings(settings);
+                            });
+                          },
+                        );
+                      },
+                    ),
+                    StatefulBuilder(builder: (context, setState) {
+                      return ListTile(
+                        enabled: settings.homePageEnabled,
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                onSubmitted: (value) {
+                                  setState(() {
+                                    settings.customUrlHomePage = value;
+                                    browserModel.updateSettings(settings);
+                                    Navigator.pop(context);
+                                  });
+                                },
+                                keyboardType: TextInputType.url,
+                                decoration: const InputDecoration(
+                                    hintText: 'Custom URL Home Page'),
+                                controller: _customHomePageController,
+                              ),
+                            )
+                          ],
+                        ),
+                      );
+                    })
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+      ListTile(
         title: const Text("Click to add Gemini API key"),
         subtitle: RichText(
           text: TextSpan(
@@ -131,24 +195,24 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
       const RegisterDeviceWidget(),
       const RegisterChildWidget(),
       const RulesWidget(),
-      ListTile(
-        title: const Text("Create a Session"),
-        subtitle: const Text("Creates current Session"),
-        trailing: Wrap(
-          spacing: 12,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.add, color: Colors.green),
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SessionScreen()));
-              },
-            ),
-          ],
-        ),
-      ),
+      // ListTile(
+      //   title: const Text("Create a Session"),
+      //   subtitle: const Text("Creates current Session"),
+      //   trailing: Wrap(
+      //     spacing: 12,
+      //     children: [
+      //       IconButton(
+      //         icon: const Icon(Icons.add, color: Colors.green),
+      //         onPressed: () {
+      //           Navigator.push(
+      //               context,
+      //               MaterialPageRoute(
+      //                   builder: (context) => const SessionScreen()));
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
       const KioskModeSwitch(),
       SwitchListTile(
         title: const Text("Block Ads"),

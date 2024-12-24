@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_browser/Db/hive_db_helper.dart';
+import 'package:flutter_browser/rss_news/models/device_model.dart';
 import 'package:flutter_browser/rss_news/models/most_visited_website_model.dart';
 import 'package:flutter_browser/rss_news/screens/home_screen.dart';
+import 'package:flutter_browser/rss_news/screens/no_news.dart';
 import 'package:flutter_browser/util.dart';
 import 'package:flutter_browser/webview_tab.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -31,6 +34,7 @@ class _EmptyTabState extends State<EmptyTab> {
 
   @override
   Widget build(BuildContext context) {
+    Device? d = HiveDBHelper.getDevice();
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(top: 30.0),
@@ -52,10 +56,13 @@ class _EmptyTabState extends State<EmptyTab> {
                     : const SizedBox.shrink();
               },
             ),
+
             // Main content (HomeScreen or AppLanguageSelectionScreen)
-            const Expanded(
-              child: HomeScreen(),
-            ),
+            if (d == null)
+              const Expanded(
+                child: HomeScreen(),
+              ),
+            // if (d != null) const Expanded(child: NoNews()),
           ],
         ),
       ),

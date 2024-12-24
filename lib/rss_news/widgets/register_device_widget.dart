@@ -125,8 +125,9 @@ class _RegisterDeviceWidgetState extends State<RegisterDeviceWidget> {
         ListTile(
           // dense: true,
           // contentPadding: EdgeInsets.z,
-          title:
-              Text(flag ? 'Register Your Device' : "Device Is Being monitored"),
+          title: Text(flag
+              ? 'Register Your Device As A Child'
+              : "Device Is Being monitored"),
           subtitle: InkWell(
             onTap: () {
               Clipboard.setData(ClipboardData(text: deviceId));

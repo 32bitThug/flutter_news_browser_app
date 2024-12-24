@@ -1,15 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/main.dart';
 import 'package:flutter_browser/models/webview_model.dart';
 import 'package:flutter_browser/rss_news/grpahql/graphql_requests.dart';
 import 'package:flutter_browser/rss_news/services/custom_rules.dart';
+import 'package:flutter_browser/rss_news/services/hilighting.dart';
 import 'package:flutter_browser/util.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'javascript_console_result.dart';
 import 'long_press_alert_dialog.dart';
@@ -37,6 +40,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
   final TextEditingController _httpAuthPasswordController =
       TextEditingController();
 
+  ContextMenu? contextMenu;
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
@@ -57,6 +61,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
           );
 
     _findInteractionController = FindInteractionController();
+    setupContextMenu();
   }
 
   @override
@@ -119,6 +124,74 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
     _webViewController?.resumeTimers();
   }
 
+  void setupContextMenu() {
+    contextMenu = ContextMenu(
+      menuItems: [
+        ContextMenuItem(
+          id: 0,
+          title: "Highlight",
+          action: () async {
+            await _webViewController?.evaluateJavascript(
+              source: 'window.highlightSelection()',
+            );
+          },
+        ),
+        ContextMenuItem(
+          id: 1,
+          title: "Copy",
+          action: () async {
+            await _webViewController?.evaluateJavascript(
+              source: 'document.execCommand("copy")',
+            );
+          },
+        ),
+        ContextMenuItem(
+          id: 2,
+          title: "Select All",
+          action: () async {
+            await _webViewController?.evaluateJavascript(
+              source: 'document.execCommand("selectAll")',
+            );
+          },
+        ),
+        ContextMenuItem(
+          id: 3,
+          title: "Share",
+          action: () async {
+            final selectedText = await _webViewController?.evaluateJavascript(
+              source: 'window.getSelection().toString()',
+            );
+            if (selectedText != null && selectedText.isNotEmpty) {
+              await Share.share(selectedText);
+            }
+          },
+        ),
+        ContextMenuItem(
+          id: 4,
+          title: "Web Search",
+          action: () async {
+            final selectedText = await _webViewController?.evaluateJavascript(
+              source: 'window.getSelection().toString()',
+            );
+            if (selectedText != null && selectedText.isNotEmpty) {
+              final encodedQuery = Uri.encodeComponent(selectedText);
+              final url =
+                  WebUri('https://www.google.com/search?q=$encodedQuery');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              }
+            }
+          },
+        ),
+      ],
+      settings: ContextMenuSettings(hideDefaultSystemContextMenuItems: true),
+    );
+  }
+
+  Future<String> loadLocalJs() async {
+    return await rootBundle.loadString('assets/js/highlighting.js');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -161,6 +234,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
     initialSettings.allowingReadAccessTo = WebUri('file://$WEB_ARCHIVE_DIR/');
 
     return InAppWebView(
+      contextMenu: contextMenu,
       keepAlive: widget.webViewModel.keepAlive,
       initialUrlRequest: URLRequest(url: widget.webViewModel.url),
       initialSettings: initialSettings,
@@ -186,6 +260,28 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         if (isCurrentTab(currentWebViewModel)) {
           currentWebViewModel.updateWithValue(widget.webViewModel);
         }
+        controller.addJavaScriptHandler(
+          handlerName: 'onHighlight',
+          callback: (args) async {
+            if (args.isNotEmpty) {
+              String jsCode = await loadLocalJs();
+
+              await _webViewController!.evaluateJavascript(source: jsCode);
+
+              String hashFun = """ window.generateContentFingerprint() """;
+              String hash =
+                  await _webViewController!.evaluateJavascript(source: hashFun);
+
+              await HiveDBHelper.addHighlight(hash, args[0]);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Highlighted text: ${args[0]}'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        );
       },
       onLoadStart: (controller, url) async {
         widget.webViewModel.isSecure = Util.urlIsSecure(url!);
@@ -202,6 +298,8 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
       },
       onLoadStop: (controller, url) async {
         _pullToRefreshController?.endRefreshing();
+        await HilightService().highlightText(
+            _webViewController, widget.webViewModel.url.toString());
         await customRules.removeElementsUsingRules(
             _webViewController,
             "AdBlock",
@@ -226,7 +324,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
             "Class",
             browserModel.getSettings().immersiveReaderEnabled,
             widget.webViewModel.url);
-        // await customRules.removeHeaderAndFooter(_webViewController);
+        await customRules.removeHeaderAndFooter(_webViewController);
 
         widget.webViewModel.url = url;
         widget.webViewModel.favicon = null;
@@ -235,6 +333,8 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
           await GraphQLRequests().pushLog(url.host.toString(), url.toString(),
               HiveDBHelper.getDevice()!.id!, "Duplicate");
         }
+
+        await HilightService().injectHighlightJS(_webViewController);
 
         var sslCertificateFuture = _webViewController?.getCertificate();
         var titleFuture = _webViewController?.getTitle();

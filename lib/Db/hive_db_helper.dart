@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_browser/rss_news/models/most_visited_website_model.dart';
 import 'package:flutter_browser/rss_news/models/device_model.dart';
 import 'package:flutter_browser/rss_news/models/rules_model.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:hive/hive.dart';
@@ -22,6 +23,7 @@ class HiveDBHelper {
     await Hive.openBox<MostVisitedWebsiteModel>('mostVisitedWebsites');
     await Hive.openBox<List<String>>('preferences');
     await Hive.openBox('token');
+    await Hive.openBox('highlights');
     debugPrint("Initialized Hive DB successfully");
   }
 
@@ -98,5 +100,42 @@ class HiveDBHelper {
 
   static DateTime? getToken() {
     return box.get('token');
+  }
+
+  static Future<void> addHighlight(String url, String highlight) async {
+    // Get and cast the stored data to the correct type
+    final dynamic rawData = box.get("highlights");
+    Map<String, List<String>> highlights;
+
+    if (rawData == null) {
+      // If no data exists, create new map
+      highlights = {};
+    } else {
+      // Convert the dynamic map to the correct type
+      highlights = (rawData as Map<dynamic, dynamic>).map(
+        (key, value) => MapEntry(
+          key.toString(),
+          (value as List<dynamic>).map((e) => e.toString()).toList(),
+        ),
+      );
+    }
+
+    // Initialize empty list for new URL
+    if (!highlights.containsKey(url)) {
+      highlights[url] = [];
+    }
+
+    // Add the highlight
+    highlights[url]!.add(highlight);
+    // debug(highlights);
+    // Save back to box
+    await box.put("highlights", highlights);
+  }
+
+  static List<String> getHighlights(String url) {
+    final highlights = (box.get("highlights") ?? <String, List<String>>{})
+        .cast<String, List<String>>();
+    // debug(highlights);
+    return highlights[url] ?? [];
   }
 }

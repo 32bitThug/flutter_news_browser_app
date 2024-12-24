@@ -131,6 +131,7 @@ flutter:
     - assets/images/news.jpeg
     - assets/js/custom.js
     - assets/js/remove_adds.js
+    - assets/js/highlighting.js
     - assets/onBoarding_images/english_img1.png
     - assets/onBoarding_images/english_img2.png
     - assets/onBoarding_images/english_img3.png

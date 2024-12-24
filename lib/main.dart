@@ -94,7 +94,7 @@ class FlutterBrowserApp extends StatelessWidget {
                   Hive.box<List<String>>('preferences').listenable(),
               builder:
                   (BuildContext context, Box<List<String>> box, Widget? child) {
-                Provider.of<TimerProvider>(context, listen: false).startTimer();
+                // Provider.of<TimerProvider>(context, listen: false).startTimer();
                 final sources = box.get('selectedSources') ?? [];
                 return sources.isNotEmpty
                     ? const Browser()

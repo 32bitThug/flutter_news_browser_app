@@ -207,8 +207,10 @@ class _ChildsActivityPageState extends State<ChildsActivityPage> {
                               ...logs!.map((log) {
                                 final pageUrl = log['page_url'];
                                 final timestamp = log['Timestamp'];
-                                final deviceName =
-                                    log["Device_id"]["deviceName"];
+                                final deviceName = log["Device_id"]
+                                        ?["deviceName"] ??
+                                    "Device Deleted";
+
                                 final time = DateFormat('hh:mm a').format(
                                   DateTime.fromMillisecondsSinceEpoch(
                                     int.parse(timestamp),
