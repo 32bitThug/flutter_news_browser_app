@@ -13,9 +13,7 @@ enum Language {
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
-final GlobalKey<NavigatorState> myNavigatorKey = GlobalKey<NavigatorState>();
-
-final GlobalKey<NavigatorState> myNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> myNavigatorKey = GlobalKey<NavigatorState>(); 
 
 const apiUrl = "https://dev-api-news-rss-sr235aqw.pragament.com/graphql";
 

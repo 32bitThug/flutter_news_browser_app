@@ -120,8 +120,7 @@ class _RegisterDeviceWidgetState extends State<RegisterDeviceWidget> {
   Widget build(BuildContext context) {
     Device? device = HiveDBHelper.getDevice();
     final flag = device == null;
-    Device? device = HiveDBHelper.getDevice();
-    final flag = device == null;
+  
     return Column(
       children: [
         ListTile(
