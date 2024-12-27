@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
+import 'package:flutter_browser/rss_news/grpahql/graphql_requests.dart';
 import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:flutter_browser/rss_news/utils/show_snackbar.dart';
 
@@ -14,7 +15,7 @@ class _RegisterChildWidgetState extends State<RegisterChildWidget> {
   late String deviceId;
 
   void showAddingDialog({int? editIndex}) async {
-    String? id = "";
+    String id = "";
     if (editIndex != null) {
       id = HiveDBHelper.getchildIdAtIndex(editIndex);
     }
@@ -42,7 +43,7 @@ class _RegisterChildWidgetState extends State<RegisterChildWidget> {
           ),
           TextButton(
             onPressed: () async {
-              if (id == null) {
+              if (id.isEmpty) {
                 // If any field is empty, show an error or do not allow saving
                 showDialog(
                   context: context,
@@ -63,9 +64,9 @@ class _RegisterChildWidgetState extends State<RegisterChildWidget> {
                 if (editIndex != null) {
                   // If editing, update the rule at the editIndex
                   await HiveDBHelper.removeChildId(editIndex);
-                  await HiveDBHelper.addChildDevice(id!);
+                  await HiveDBHelper.addChildDevice(id);
                 } else {
-                  await HiveDBHelper.addChildDevice(id!);
+                  await HiveDBHelper.addChildDevice(id);
                 }
                 // debugPrint(rules.toString());
                 Navigator.pop(context);
@@ -96,13 +97,38 @@ class _RegisterChildWidgetState extends State<RegisterChildWidget> {
       return childDevices.asMap().entries.map((entry) {
         final index = entry.key;
         final id = entry.value;
-        return ListTile(
-          title: Text(id), // Use rule properties
-          onTap: () {
-            Navigator.pop(context); // Close the dialog
-            showAddingDialog(
-              editIndex: index,
-            );
+
+        return FutureBuilder(
+          future:
+              GraphQLRequests().getDeviceBydeviceID(id), // Fetch device name
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // Show a loading indicator while waiting for the result
+              return ListTile(
+                title: Text(id),
+                subtitle: const Text("Loading..."),
+              );
+            } else if (snapshot.hasError) {
+              // Handle any errors that occur
+              return ListTile(
+                title: Text(id),
+                subtitle: Text("Error: ${snapshot.error}"),
+              );
+            } else {
+              // Display the fetched data
+              final deviceName =
+                  snapshot.data?["deviceName"] ?? "Not a Valid ID";
+              return ListTile(
+                title: Text(id),
+                subtitle: Text(deviceName),
+                onTap: () {
+                  Navigator.pop(context); // Close the dialog
+                  showAddingDialog(
+                    editIndex: index,
+                  );
+                },
+              );
+            }
           },
         );
       }).toList();
@@ -141,7 +167,7 @@ class _RegisterChildWidgetState extends State<RegisterChildWidget> {
                           child: SingleChildScrollView(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: [...showIds(childDevices)],
+                              children: showIds(childDevices),
                             ),
                           ),
                         ),

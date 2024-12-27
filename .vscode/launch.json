@@ -3,23 +3,23 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "flutter_news_browser",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "flutter_news_browser (profile mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "flutter_news_browser (release mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
-        }
-    ]
+    // "configurations": [
+    //     {
+    //         "name": "flutter_news_browser",
+    //         "request": "launch",
+    //         "type": "dart"
+    //     },
+    //     {
+    //         "name": "flutter_news_browser (profile mode)",
+    //         "request": "launch",
+    //         "type": "dart",
+    //         "flutterMode": "profile"
+    //     },
+    //     {
+    //         "name": "flutter_news_browser (release mode)",
+    //         "request": "launch",
+    //         "type": "dart",
+    //         "flutterMode": "release"
+    //     }
+    // ]
 }

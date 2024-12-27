@@ -12,9 +12,9 @@ function modifyPage() {
     let removed = 0;
 
     // Remove header if found
-    if (header) {
-      header.remove();     
-    }
+    // if (header) {
+    //   header.remove();     
+    // }
 
     // Remove footer if found
     if (footer) {

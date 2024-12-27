@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/app_bar/url_info_popup.dart';
 import 'package:flutter_browser/custom_image.dart';
 import 'package:flutter_browser/main.dart';
@@ -571,7 +572,7 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
                 );
               case PopupMenuActions.CHILD_ACTIVITY:
                 return CustomPopupMenuItem<String>(
-                  enabled: true,
+                  enabled: HiveDBHelper.getAllChildDevices().isNotEmpty,
                   value: choice,
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
