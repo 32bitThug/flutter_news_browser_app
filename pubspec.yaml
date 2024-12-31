@@ -123,7 +123,6 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/public_suffix_list.dat
     - assets/easylist.txt
     - assets/images/google_logo.png
     - assets/images/yahoo_logo.png
