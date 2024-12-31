@@ -1,11 +1,14 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/models/browser_model.dart';
 import 'package:flutter_browser/models/search_engine_model.dart';
 import 'package:flutter_browser/models/webview_model.dart';
-import 'package:flutter_browser/rss_news/screens/session_screen.dart';
-import 'package:flutter_browser/rss_news/screens/session_screen.dart';
+import 'package:flutter_browser/rss_news/provider/adblock_filter_provider.dart';
+import 'package:flutter_browser/rss_news/services/adblock_service.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
+import 'package:flutter_browser/rss_news/widgets/adblock_selection.dart';
 import 'package:flutter_browser/rss_news/widgets/kiosk_mode_switch.dart';
 import 'package:flutter_browser/rss_news/widgets/register_child_widget.dart';
 import 'package:flutter_browser/rss_news/widgets/register_device_widget.dart';
@@ -61,8 +64,10 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
   }
 
   List<Widget> _buildBaseSettings(Size size) {
+    var currentWebViewModel = Provider.of<WebViewModel>(context, listen: false);
     var browserModel = Provider.of<BrowserModel>(context, listen: true);
     var settings = browserModel.getSettings();
+    var adblockFilterProvider = Provider.of<AdblockFilterProvider>(context);
 
     var widgets = <Widget>[
       const ListTile(
@@ -155,6 +160,27 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
           );
         },
       ),
+      OptionToggleWithSelection(
+        values: const [
+          "EasyList",
+          "ABPVN List",
+          "Bulgarian List",
+          "Czech List",
+        ],
+        onToggle: (isEnabled) async {
+          adblockFilterProvider.toggleContentBlocker();
+          if (isEnabled) {
+            adblockFilterProvider.initializeBlockers(
+                await AdBlockService().loadEasyListRules(context));
+            currentWebViewModel.webViewController?.reload();
+          }
+          debug("Toggle: $isEnabled");
+        },
+        onSelectionChanged: (selectedValues) {
+          debug("Selected Values: $selectedValues");
+        },
+      ),
+
       ListTile(
         title: const Text("Click to add Gemini API key"),
         subtitle: RichText(
@@ -234,6 +260,16 @@ class _CrossPlatformSettingsState extends State<CrossPlatformSettings> {
           setState(() {
             settings.immersiveReaderEnabled = value;
             browserModel.updateSettings(settings);
+          });
+        },
+      ),
+      SwitchListTile(
+        title: const Text("Immersive Reader"),
+        subtitle: const Text("Removes the Html elements present in Rules"),
+        value: settings.immersiveReaderEnabled,
+        onChanged: (value) {
+          setState(() {
+            debug(HiveDBHelper.getWhitelistedWebsites());
           });
         },
       ),

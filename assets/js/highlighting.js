@@ -6,7 +6,7 @@ window.generateContentFingerprint = function() {
   // var hash = 0, i, chr;
   // for (i = 0; i < mainContent.length; i++) {
   //   chr = mainContent.charCodeAt(i);
-  //   hash = ((hash << 5) - hash) + chr;
+//   hash = ((hash << 5) - hash) + chr;
   //   hash |= 0; // Convert to 32bit integer
   // }
 

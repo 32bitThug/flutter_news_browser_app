@@ -26,7 +26,6 @@ class _JavaScriptConsoleState extends State<JavaScriptConsole> {
   }
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
   }
   @override

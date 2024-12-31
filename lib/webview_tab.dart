@@ -5,8 +5,13 @@ import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/main.dart';
 import 'package:flutter_browser/models/webview_model.dart';
 import 'package:flutter_browser/rss_news/grpahql/graphql_requests.dart';
+import 'package:flutter_browser/rss_news/models/website_list.dart';
+import 'package:flutter_browser/rss_news/provider/adblock_filter_provider.dart';
 import 'package:flutter_browser/rss_news/services/custom_rules.dart';
 import 'package:flutter_browser/rss_news/services/hilighting.dart';
+import 'package:flutter_browser/rss_news/services/whitelist.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
+import 'package:flutter_browser/rss_news/utils/show_snackbar.dart';
 import 'package:flutter_browser/util.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -18,6 +23,7 @@ import 'javascript_console_result.dart';
 import 'long_press_alert_dialog.dart';
 import 'models/browser_model.dart';
 
+// check onload
 final webViewTabStateKey = GlobalKey<_WebViewTabState>();
 
 class WebViewTab extends StatefulWidget {
@@ -39,29 +45,33 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
       TextEditingController();
   final TextEditingController _httpAuthPasswordController =
       TextEditingController();
-
+  var _isWebsiteAllowed = true;
   ContextMenu? contextMenu;
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
-    _pullToRefreshController = kIsWeb
-        ? null
-        : PullToRefreshController(
-            settings: PullToRefreshSettings(color: Colors.blue),
-            onRefresh: () async {
-              if (defaultTargetPlatform == TargetPlatform.android) {
-                _webViewController?.reload();
-              } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-                _webViewController?.loadUrl(
-                    urlRequest:
-                        URLRequest(url: await _webViewController?.getUrl()));
-              }
-            },
-          );
+    _isWebsiteAllowed = Whitelist.isWebsiteAllowed(widget.webViewModel.url!);
+    if (_isWebsiteAllowed) {
+      _pullToRefreshController = kIsWeb
+          ? null
+          : PullToRefreshController(
+              settings: PullToRefreshSettings(color: Colors.blue),
+              onRefresh: () async {
+                if (defaultTargetPlatform == TargetPlatform.android) {
+                  _webViewController?.reload();
+                } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+                  _webViewController?.loadUrl(
+                      urlRequest:
+                          URLRequest(url: await _webViewController?.getUrl()));
+                }
+              },
+            );
 
-    _findInteractionController = FindInteractionController();
-    setupContextMenu();
+      _findInteractionController = FindInteractionController();
+      setupContextMenu();
+    }
+    // _loadEasyListRules();
   }
 
   @override
@@ -123,6 +133,14 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
   void resumeTimers() {
     _webViewController?.resumeTimers();
   }
+
+// Future<void> _loadEasyListRules() async {
+//   // Load EasyList file
+//   var blockers = await AdBlockService().loadEasyListRules(context);
+//   setState(() {
+//     contentBlockers = blockers;
+//   });
+// }
 
   void setupContextMenu() {
     contextMenu = ContextMenu(
@@ -194,16 +212,21 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: _buildWebView(),
-    );
+    return !_isWebsiteAllowed
+        ? const Center(
+            child: Text("Website Not Allowed"),
+          )
+        : Container(
+            color: Colors.white,
+            child: _buildWebView(),
+          );
   }
 
   InAppWebView _buildWebView() {
     var browserModel = Provider.of<BrowserModel>(context, listen: true);
     var settings = browserModel.getSettings();
     var currentWebViewModel = Provider.of<WebViewModel>(context, listen: true);
+    var adblockFilterProvider = Provider.of<AdblockFilterProvider>(context);
 
     if (Util.isAndroid()) {
       InAppWebViewController.setWebContentsDebuggingEnabled(
@@ -232,6 +255,11 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
     initialSettings.isFraudulentWebsiteWarningEnabled = true;
     initialSettings.disableLongPressContextMenuOnLinks = true;
     initialSettings.allowingReadAccessTo = WebUri('file://$WEB_ARCHIVE_DIR/');
+    // try {
+    //   initialSettings.contentBlockers = adblockFilterProvider.activeBlockers;
+    // } catch (e) {
+    //   showSnackBar(  message:"Error setting content blockers: $e");
+    // }
 
     return InAppWebView(
       contextMenu: contextMenu,
@@ -254,7 +282,13 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         if (Util.isAndroid()) {
           controller.startSafeBrowsing();
         }
-
+        //   if (adblockFilterProvider.iscontentBlockerEnabled) {
+        //   try {
+        //     await _webViewController.setconte (adblockFilterProvider.activeBlockers);
+        //   } catch (e) {
+        //     debugPrint('Error setting content blockers: $e');
+        //   }
+        // }
         widget.webViewModel.settings = await controller.getSettings();
 
         if (isCurrentTab(currentWebViewModel)) {
@@ -273,10 +307,11 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
                   await _webViewController!.evaluateJavascript(source: hashFun);
 
               await HiveDBHelper.addHighlight(hash, args[0]);
+              // ignore: use_build_context_synchronously
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Highlighted text: ${args[0]}'),
-                  duration: Duration(seconds: 2),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             }
@@ -462,19 +497,33 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
       shouldOverrideUrlLoading: (controller, navigationAction) async {
         var url = navigationAction.request.url;
 
-        if (url != null &&
-            !["http", "https", "file", "chrome", "data", "javascript", "about"]
-                .contains(url.scheme)) {
-          if (await canLaunchUrl(url)) {
-            // Launch the App
-            await launchUrl(
-              url,
-            );
-            // and cancel the request
+        // List<Website> websites = HiveDBHelper.getWhitelistedWebsites();
+        // Set<String> whitelistDomains = websites.map((e) => e.domain).toSet();
+
+        if (url != null) {
+          if (!Whitelist.isWebsiteAllowed(url)) {
+            showSnackBar(message: 'This website is blocked: ${url.host}');
+            // Cancel the navigation
             return NavigationActionPolicy.CANCEL;
+          }
+          // Handle non-standard schemes as before
+          if (![
+            "http",
+            "https",
+            "file",
+            "chrome",
+            "data",
+            "javascript",
+            "about"
+          ].contains(url.scheme)) {
+            if (await canLaunchUrl(url)) {
+              await launchUrl(url);
+              return NavigationActionPolicy.CANCEL;
+            }
           }
         }
 
+        // Allow navigation for all other URLs
         return NavigationActionPolicy.ALLOW;
       },
       onDownloadStartRequest: (controller, url) async {
@@ -659,8 +708,10 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
     resume();
     if (widget.webViewModel.needsToCompleteInitialLoad) {
       widget.webViewModel.needsToCompleteInitialLoad = false;
-      await widget.webViewModel.webViewController
-          ?.loadUrl(urlRequest: URLRequest(url: widget.webViewModel.url));
+      if (Whitelist.isWebsiteAllowed(widget.webViewModel.url!)) {
+        await widget.webViewModel.webViewController
+            ?.loadUrl(urlRequest: URLRequest(url: widget.webViewModel.url));
+      }
     }
   }
 

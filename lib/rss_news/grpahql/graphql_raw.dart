@@ -11,21 +11,21 @@ class GraphQLRaw {
 }
 ''';
 
-  static const getFeedsByCategory =
-      r'''query GetFeedsByCategory($category: String) {
-    getFeeds(filter: {
-      category: $category,
-    }) {
-      weight
-      feed_url
-      _id
-      language
-      category
-      source
-    }
-  }
+  // static const getFeedsByCategory =
+  //     r'''query GetFeedsByCategory($category: String) {
+  //   getFeeds(filter: {
+  //     category: $category,
+  //   }) {
+  //     weight
+  //     feed_url
+  //     _id
+  //     language
+  //     category
+  //     source
+  //   }
+  // }
 
-''';
+// ''';
   static const createDevice =
       r'''mutation createDevice($id:String!,$name:String!,$gid:ID!,$pid:ID!){ 
   createDevice( deviceID: $id 
@@ -135,6 +135,16 @@ mutation CreateSession(
     text
     type
     order
+  }
+}
+''';
+
+  static const getWhitelistedWebsites = r'''
+  query{ 
+  getAllWebsiteLists{
+  
+    domain
+  
   }
 }
 ''';

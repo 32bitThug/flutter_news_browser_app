@@ -188,8 +188,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     curve: Curves.easeInOut,
                   );
                 },
-                child: const Icon(Icons.arrow_back),
                 backgroundColor: Colors.blue,
+                child: const Icon(Icons.arrow_back),
               ),
             ),
           ),

@@ -7,6 +7,8 @@ import 'package:flutter_browser/rss_news/models/device_model.dart';
 import 'package:flutter_browser/rss_news/models/feed_model.dart';
 import 'package:flutter_browser/rss_news/models/page_attributes_model.dart';
 import 'package:flutter_browser/rss_news/models/session_model.dart';
+import 'package:flutter_browser/rss_news/models/website_list.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:flutter_browser/rss_news/utils/show_snackbar.dart';
 
 class GraphQLRequests {
@@ -17,7 +19,7 @@ class GraphQLRequests {
         .performQuery(GraphQLRaw.getFeeds, variables: {});
 
     if (response.hasException) {
-      debugPrint('GraphQL Error: ${response.exception}');
+      debug('GraphQL Error: ${response.exception}');
       return null;
     }
 
@@ -194,7 +196,7 @@ class GraphQLRequests {
     final response = await GraphQLService(erpSchoolApiUrl).performQuery(
         GraphQLRaw.getPageAttributesByBookID,
         variables: {'bookID': bookID});
-    debugPrint('Has exeption: ${response.exception}');
+    debug('Has exeption: ${response.exception}');
 
     if (response.hasException) {
       showSnackBar(message: 'GraphQL Error: ${response.exception}');
@@ -209,4 +211,24 @@ class GraphQLRequests {
             .toList()
         : null;
   }
+
+  Future<List<Website>?> getWhitelistedWebsites() async {
+    final response = await GraphQLService(parentalControlApiUrl)
+        .performQuery(GraphQLRaw.getWhitelistedWebsites, variables: {});
+
+    if (response.hasException) {
+      showSnackBar(message: response.exception.toString());
+      return null;
+    }
+
+    final Map<String, dynamic>? data = response.data;
+
+    return data != null && data.containsKey('getAllWebsiteLists')
+        ? (data['getAllWebsiteLists'] as List< dynamic>)
+            .map((e) => Website.fromMap(e as Map<String, dynamic>))
+            .toList()
+        : null;
+
+  }
+  
 }

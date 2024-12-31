@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/models/browser_model.dart';
 import 'package:flutter_browser/models/webview_model.dart';
+import 'package:flutter_browser/rss_news/utils/show_snackbar.dart';
 import 'package:flutter_browser/webview_tab.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
@@ -138,7 +139,7 @@ class _ChildsActivityPageState extends State<ChildsActivityPage> {
         isLoading = false;
       });
     } catch (e) {
-      debugPrint('Error fetching logs: $e');
+      showSnackBar(message: 'Error fetching logs: $e');
       setState(() {
         isLoading = false;
       });

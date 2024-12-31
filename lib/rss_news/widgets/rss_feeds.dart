@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/models/browser_model.dart';
 import 'package:flutter_browser/models/webview_model.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:flutter_browser/webview_tab.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:http/http.dart' as http;
@@ -16,7 +17,7 @@ import '../models/feed_item.dart';
 
 class RSSFeedScreen extends StatefulWidget {
   final List<String> feedUrls;
-  const RSSFeedScreen({Key? key, required this.feedUrls});
+  const RSSFeedScreen({super.key, required this.feedUrls});
   // WebViewTabAppBar _webViewTabAppBar = new WebViewTabAppBar();
   @override
   State<RSSFeedScreen> createState() => _RSSFeedScreenState();
@@ -77,11 +78,12 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
             final document = xml.XmlDocument.parse(decodedBody);
             final items = document.findAllElements('item');
             final feedItems = items.map((item) {
-              final title = item.findElements('title').first.text;
-              final description = item.findElements('description').first.text;
-              final link = item.findElements('link').first.text;
-              final pubDate = item.findElements('pubDate').first.text;
-              // debugPrint(pubDate.toString());
+              final title = item.findElements('title').first.innerText;
+              final description =
+                  item.findElements('description').first.innerText;
+              final link = item.findElements('link').first.innerText;
+              final pubDate = item.findElements('pubDate').first.innerText;
+              // debug(pubDate.toString());
               final imageUrl = item.findAllElements('media:content').isNotEmpty
                   ? item
                       .findAllElements('media:content')
@@ -99,10 +101,10 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
         } catch (e) {
           if (e is xml.XmlParserException) {
             // Log XML parsing error and continue with next URL
-            debugPrint('XML Parsing Error for $url: ${e.message}');
+            debug('XML Parsing Error for $url: ${e.message}');
           } else {
             // Log other errors and continue with next URL
-            debugPrint('Error loading RSS feed from $url: $e');
+            debug('Error loading RSS feed from $url: $e');
           }
         }
       }

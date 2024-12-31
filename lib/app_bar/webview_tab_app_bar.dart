@@ -1,4 +1,6 @@
 // import 'package:cached_network_image/cached_network_image.dart';
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +16,7 @@ import 'package:flutter_browser/pages/developers/main.dart';
 import 'package:flutter_browser/pages/settings/main.dart';
 import 'package:flutter_browser/rss_news/models/most_visited_website_model.dart';
 import 'package:flutter_browser/rss_news/services/summeriz_article.dart';
+import 'package:flutter_browser/rss_news/services/whitelist.dart';
 import 'package:flutter_browser/tab_popup_menu_actions.dart';
 import 'package:flutter_browser/util.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
@@ -154,7 +157,7 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
                 url = WebUri(settings.searchEngine.searchUrl + value);
               }
 
-              if (webViewController != null) {
+              if (webViewController != null &&  Whitelist.isWebsiteAllowed(url)) {
                 webViewController.loadUrl(urlRequest: URLRequest(url: url));
               } else {
                 addNewTab(url: url);
@@ -1167,9 +1170,9 @@ class _WebViewTabAppBarState extends State<WebViewTabAppBar>
         $jsCode
       """;
       // String newJS = await load();
-      final result =
+      
           await webViewController!.evaluateJavascript(source: finalJsCode);
-      debugPrint("rrrrrrrrrrrr" + result.toString());
+      // debugPrint("rrrrrrrrrrrr" + result.toString());
     }
   }
 
