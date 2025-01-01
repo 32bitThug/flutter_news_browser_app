@@ -38,7 +38,7 @@ class _HomeFeedsState extends State<HomeFeeds> {
       isLoading = true;
     });
     try {
-      final feeds = await widget.customLanguageFeeds;
+      final feeds =  widget.customLanguageFeeds;
       if (!mounted) return; // Check if widget is still mounted
       setState(() {
         feedUrls =
@@ -47,6 +47,7 @@ class _HomeFeedsState extends State<HomeFeeds> {
     } catch (e) {
       // Handle error if needed
     } finally {
+      // ignore: control_flow_in_finally
       if (!mounted) return; // Check if widget is still mounted
       setState(() {
         isLoading = false;

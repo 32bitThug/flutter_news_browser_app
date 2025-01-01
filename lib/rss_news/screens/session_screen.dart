@@ -313,7 +313,7 @@ class _SessionScreenState extends State<SessionScreen> {
                                                         .text; // Check the new value
                                                   }
                                                 });
-                                                debugPrint(
+                                                debug(
                                                     selectedChapter); // Use debugPrint to log
                                               },
                                             ),

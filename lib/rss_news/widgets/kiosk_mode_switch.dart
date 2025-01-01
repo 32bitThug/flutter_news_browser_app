@@ -100,7 +100,7 @@ class KioskModeSwitchState extends State<KioskModeSwitch> {
     try {
       await platform.invokeMethod('setKioskMode', {'enabled': enabled});
     } on PlatformException catch (e) {
-      print("Failed to invoke method: '${e.message}'.");
+      debug("Failed to invoke method: '${e.message}'.");
     }
   }
 

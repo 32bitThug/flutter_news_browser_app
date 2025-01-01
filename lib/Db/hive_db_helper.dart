@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_browser/rss_news/models/most_visited_website_model.dart';
 import 'package:flutter_browser/rss_news/models/device_model.dart';
 import 'package:flutter_browser/rss_news/models/rules_model.dart';
-import 'package:flutter_browser/rss_news/utils/debug.dart';
+import 'package:flutter_browser/rss_news/models/website_list.dart';
+// import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:hive/hive.dart';
@@ -16,6 +17,7 @@ class HiveDBHelper {
     Hive.registerAdapter(RulesAdapter());
     Hive.registerAdapter(DeviceAdapter());
     Hive.registerAdapter(MostVisitedWebsiteModelAdapter());
+    Hive.registerAdapter(WebsiteAdapter());
     await Hive.openBox('rules');
     await Hive.openBox('device');
     await Hive.openBox('child_devices');
@@ -24,6 +26,7 @@ class HiveDBHelper {
     await Hive.openBox<List<String>>('preferences');
     await Hive.openBox('token');
     await Hive.openBox('highlights');
+    await Hive.openBox('whilteListWebsites');
     debugPrint("Initialized Hive DB successfully");
   }
 
@@ -138,4 +141,13 @@ class HiveDBHelper {
     // debug(highlights);
     return highlights[url] ?? [];
   }
+
+  static Future<void> setWhitelistedWebsites(List<Website>? websites) async {
+    // Save back to box
+    Hive.box('whilteListWebsites').clear();
+    await box.put("whilteListWebsites", websites);
+  }
+  static List<Website> getWhitelistedWebsites() {
+    return box.get("whilteListWebsites")?.cast<Website>() ?? [];
+  } 
 }

@@ -1,9 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/rss_news/models/device_model.dart';
 import 'package:flutter_browser/rss_news/models/most_visited_website_model.dart';
 import 'package:flutter_browser/rss_news/screens/home_screen.dart';
-import 'package:flutter_browser/rss_news/screens/no_news.dart';
+import 'package:flutter_browser/rss_news/services/whitelist.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:flutter_browser/util.dart';
 import 'package:flutter_browser/webview_tab.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -89,7 +92,7 @@ class _EmptyTabState extends State<EmptyTab> {
                   children: [
                     Container(
                         width: 45,
-                        padding: EdgeInsets.all(3),
+                        padding: const EdgeInsets.all(3),
                         child: Image.network(
                           website.faviconUrl.isNotEmpty &&
                                   Uri.tryParse(website.faviconUrl)
@@ -152,7 +155,7 @@ class _EmptyTabState extends State<EmptyTab> {
       webUri = WebUri('${settings.searchEngine.searchUrl}$url');
     }
 
-    if (widget.webViewController != null) {
+    if (widget.webViewController != null &&  Whitelist.isWebsiteAllowed(WebUri(url))) {
       webViewModel.webViewController!
           .loadUrl(urlRequest: URLRequest(url: webUri));
     } else {
@@ -208,7 +211,7 @@ class _EmptyTabState extends State<EmptyTab> {
     final key = website.key;
     if (key != null) {
       await box.delete(key);
-      print("Deleted website: ${website.domain}");
+      debug("Deleted website: ${website.domain}");
     }
   }
 }

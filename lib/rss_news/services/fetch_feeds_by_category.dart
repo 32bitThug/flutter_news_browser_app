@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_browser/rss_news/constants/constants.dart';
 import 'package:flutter_browser/rss_news/models/feed_model.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 
 import 'package:http/http.dart' as http;
 class FetchFeedsByCategory {
@@ -21,7 +22,7 @@ class FetchFeedsByCategory {
             .where((feed) => feed.category.toLowerCase() == category.toLowerCase())
             .toList();
             
-        print('Fetched ${allFeeds.length} feeds for category: $category');
+        debug('Fetched ${allFeeds.length} feeds for category: $category');
         return allFeeds;
       } else {
         throw Exception('Unexpected data format: "feeds" key is missing or not a list');
@@ -30,7 +31,7 @@ class FetchFeedsByCategory {
       throw Exception('Failed to fetch data. Status code: ${response.statusCode}');
     }
   } catch (e) {
-    print('Error fetching feeds by category: $e');
+    debug('Error fetching feeds by category: $e');
     throw Exception('Error fetching feeds by category: $e');
   }
 }

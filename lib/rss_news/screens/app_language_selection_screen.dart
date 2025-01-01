@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_browser/rss_news/screens/welcome_screen.dart';
 
 class AppLanguageSelectionScreen extends StatefulWidget {
+  const AppLanguageSelectionScreen({super.key});
+
   @override
   _AppLanguageSelectionScreenState createState() =>
       _AppLanguageSelectionScreenState();

@@ -53,7 +53,7 @@ class HilightService {
   Future<void> highlightText(
       InAppWebViewController? webViewController, String url) async {
     if (webViewController == null) return;
-    debug(url);
+    // debug(url);
 
     try {
       String jsCode = await loadLocalJs();
@@ -63,7 +63,7 @@ class HilightService {
       String hash = await webViewController.evaluateJavascript(source: hashFun);
       final List<String> highlights = HiveDBHelper.getHighlights(hash);
 
-      debug(highlights);
+      // debug(highlights);
 
       String highlightJs = """
         window.highlightContent(${highlights.map((e) => jsonEncode(e)).toList()});
@@ -72,12 +72,11 @@ class HilightService {
       // Evaluate the generated JavaScript
       await webViewController.evaluateJavascript(source: highlightJs);
     } catch (e) {
-      print('Error highlighting text: $e');
+      debug('Error highlighting text: $e');
     }
   }
 
   Future<String> loadLocalJs() async {
     return await rootBundle.loadString('assets/js/highlighting.js');
   }
-
 }

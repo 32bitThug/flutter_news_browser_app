@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/rss_news/constants/constants.dart';
 import 'package:flutter_browser/rss_news/models/feed_model.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:flutter_browser/rss_news/widgets/rss_feeds.dart';
 
 
@@ -29,7 +30,7 @@ class _CustomCategoryFeedsState extends State<CustomCategoryFeeds> {
             feeds.map((feed) => '${feed.feed_url}*${feed.source}').toList();
       });
     } catch (e) {
-      print('Error populating feedUrls: $e');
+      debug('Error populating feedUrls: $e');
     }
     setState(() {
       isLoading = false;

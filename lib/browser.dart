@@ -49,12 +49,7 @@ class _BrowserState extends State<Browser> with SingleTickerProviderStateMixin {
       }
     }
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
+  
   restore() async {
     var browserModel = Provider.of<BrowserModel>(context, listen: true);
     browserModel.restore();

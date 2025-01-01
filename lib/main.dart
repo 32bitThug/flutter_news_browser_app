@@ -3,8 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_browser/Db/hive_db_helper.dart';
 import 'package:flutter_browser/rss_news/constants/constants.dart';
+import 'package:flutter_browser/rss_news/grpahql/graphql_requests.dart';
+import 'package:flutter_browser/rss_news/provider/adblock_filter_provider.dart';
 import 'package:flutter_browser/rss_news/provider/timer_provider.dart';
 import 'package:flutter_browser/rss_news/screens/app_language_selection_screen.dart';
+import 'package:flutter_browser/rss_news/services/adblock_service.dart';
 import 'package:flutter_browser/rss_news/services/http_ovverides.dart';
 import 'package:flutter_browser/rss_news/services/unique_id.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -52,6 +55,8 @@ void main() async {
   TAB_VIEWER_BOTTOM_OFFSET_3 = 150.0;
 
   await FlutterDownloader.initialize(debug: kDebugMode);
+  HiveDBHelper.setWhitelistedWebsites(
+      await GraphQLRequests().getWhitelistedWebsites());
 
   // Start the app
   runApp(
@@ -67,6 +72,7 @@ void main() async {
           },
         ),
         ChangeNotifierProvider(create: (_) => TimerProvider()),
+        ChangeNotifierProvider(create: (_) => AdblockFilterProvider()),
       ],
       child: const FlutterBrowserApp(),
     ),
@@ -98,7 +104,7 @@ class FlutterBrowserApp extends StatelessWidget {
                 final sources = box.get('selectedSources') ?? [];
                 return sources.isNotEmpty
                     ? const Browser()
-                    : AppLanguageSelectionScreen();
+                    : const AppLanguageSelectionScreen();
               },
             ),
       },

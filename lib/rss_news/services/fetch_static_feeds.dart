@@ -1,5 +1,6 @@
 import 'package:flutter_browser/rss_news/constants/constants.dart';
 import 'package:flutter_browser/rss_news/models/feed_model.dart';
+import 'package:flutter_browser/rss_news/utils/debug.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -27,7 +28,7 @@ class FetchStaticFeeds {
             'Failed to fetch data. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      debug('Error fetching data: $e');
       throw Exception('Error fetching data: $e');
     }
   }
